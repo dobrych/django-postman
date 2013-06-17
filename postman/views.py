@@ -1,6 +1,11 @@
 from __future__ import unicode_literals
 import urlparse
 
+try:
+    import json
+except ImportError:
+    import simplejson as json
+
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -10,7 +15,7 @@ except ImportError:
     from postman.future_1_5 import get_user_model
 from django.core.urlresolvers import reverse
 from django.db.models import Q
-from django.http import Http404
+from django.http import Http404, HttpResponse
 from django.shortcuts import render_to_response, get_object_or_404, redirect
 from django.template import RequestContext
 from django.utils.translation import ugettext as _
@@ -37,6 +42,10 @@ def _get_referer(request):
         return urlparse.urlunsplit(('', '', sr.path, sr.query, sr.fragment))
 
 
+def _json_response(data_dict):
+    return HttpResponse(json.dumps(data_dict), mimetype="application/json")
+
+
 ########
 # Views
 ########
@@ -49,7 +58,8 @@ def _folder(request, folder_name, view_name, option, template_name):
     if order_by:
         kwargs.update(order_by=order_by)
     msgs = getattr(Message.objects, folder_name)(request.user, **kwargs)
-    return render_to_response(template_name, {
+
+    resp_dict = {
         'pm_messages': msgs,  # avoid 'messages', already used by contrib.messages
         'by_conversation': option is None,
         'by_message': option == OPTION_MESSAGES,
@@ -57,7 +67,13 @@ def _folder(request, folder_name, view_name, option, template_name):
         'by_message_url': reverse(view_name, args=[OPTION_MESSAGES]),
         'current_url': request.get_full_path(),
         'gets': request.GET,  # useful to postman_order_by template tag
-        }, context_instance=RequestContext(request))
+    }
+
+    if request.is_ajax():
+        return _json_response(resp_dict)
+
+    return render_to_response(template_name, resp_dict,
+                              context_instance=RequestContext(request))
 
 
 @login_required
@@ -144,7 +160,13 @@ def write(request, recipients=None, form_classes=(WriteForm, AnonymousWriteForm)
                 messages.success(request, _("Message successfully sent."), fail_silently=True)
             else:
                 messages.warning(request, _("Message rejected for at least one recipient."), fail_silently=True)
-            return redirect(request.GET.get('next', success_url or next_url or 'postman_inbox'))
+            next_redir = request.GET.get('next', success_url or next_url or 'postman_inbox')
+            if request.is_ajax():
+                return _json_response({'sent': True, 'next': next_redir})
+            return redirect(next_redir)
+        elif request.is_ajax():
+            errors = dict((key, [unicode(v) for v in values]) for key, values in form.errors.items())
+            return _json_response({'sent': False, 'errors': errors})
     else:
         initial = dict(request.GET.items())  # allow optional initializations by query string
         if recipients:
@@ -206,7 +228,13 @@ def reply(request, message_id, form_class=FullReplyForm, formatters=(format_subj
                 messages.success(request, _("Message successfully sent."), fail_silently=True)
             else:
                 messages.warning(request, _("Message rejected for at least one recipient."), fail_silently=True)
-            return redirect(request.GET.get('next', success_url or next_url or 'postman_inbox'))
+            next_redir = success_url or next_url or 'postman_inbox'
+            if request.is_ajax():
+                return _json_response({'sent': True, 'next': next_redir})
+            return redirect(request.GET.get('next', next_redir))
+        elif request.is_ajax():
+            errors = dict((key, [unicode(v) for v in values]) for key, values in form.errors.items())
+            return _json_response({'sent': False, 'errors': errors})
     else:
         initial.update(request.GET.items())  # allow overwriting of the defaults by query string
         form = form_class(initial=initial, channel=autocomplete_channel)
@@ -247,6 +275,12 @@ def _view(request, filter, form_class=QuickReplyForm, formatters=(format_subject
                 break
         else:
             received = None
+        if request.is_ajax():
+            return _json_response({
+                'pm_messages': msgs,
+                'archived': archived,
+                'reply_to_pk': received.pk if received else None
+            })
         return render_to_response(template_name, {
             'pm_messages': msgs,
             'archived': archived,
@@ -294,9 +328,13 @@ def _update(request, field_bit, success_msg, field_value=None, success_url=None)
         if not (recipient_rows or sender_rows):
             raise Http404  # abnormal enough, like forged ids
         messages.success(request, success_msg, fail_silently=True)
+        if request.is_ajax():
+            return _json_response({'success': True})
         return redirect(request.GET.get('next', success_url or next_url))
     else:
         messages.warning(request, _("Select at least one object."), fail_silently=True)
+        if request.is_ajax():
+            return _json_response({'success': False})
         return redirect(next_url)
 
 
