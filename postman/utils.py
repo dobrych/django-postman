@@ -99,3 +99,16 @@ def notify_user(object, action):
     else:
         if not DISABLE_USER_EMAILING and user.email and user.is_active:
             email('postman/email_user_subject.txt', 'postman/email_user.txt', [user.email], object, action)
+
+
+# JSON datetime encoder
+import json
+import datetime
+
+
+class DateTimeJSONEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, datetime.datetime):
+            return obj.isoformat()
+        else:
+            return super(DateTimeJSONEncoder, self).default(obj)

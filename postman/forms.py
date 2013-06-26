@@ -159,6 +159,15 @@ class WriteForm(BaseWriteForm):
         fields = ('recipients', 'subject', 'body')
 
 
+class SimpleWriteForm(BaseWriteForm):
+    """The form for an authenticated user, to compose a message."""
+    # specify help_text only to avoid the possible default 'Enter text to search.' of ajax_select v1.2.5
+    recipients = CommaSeparatedUserField(label=(_("Recipients"), _("Recipient")), help_text='')
+
+    class Meta(BaseWriteForm.Meta):
+        fields = ('recipients', 'body')
+
+
 class AnonymousWriteForm(BaseWriteForm):
     """The form for an anonymous user, to compose a message."""
     # The 'max' customization should not be permitted here.

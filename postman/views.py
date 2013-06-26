@@ -29,7 +29,7 @@ from postman.fields import autocompleter_app
 from postman.forms import WriteForm, AnonymousWriteForm, QuickReplyForm, FullReplyForm
 from postman.models import Message, get_order_by
 from postman.urls import OPTION_MESSAGES
-from postman.utils import format_subject, format_body
+from postman.utils import format_subject, format_body, DateTimeJSONEncoder
 
 
 ##########
@@ -43,7 +43,8 @@ def _get_referer(request):
 
 
 def _json_response(data_dict):
-    return HttpResponse(json.dumps(data_dict), mimetype="application/json")
+    return HttpResponse(json.dumps(data_dict, cls=DateTimeJSONEncoder),
+                        mimetype="application/json")
 
 
 ########
@@ -70,6 +71,7 @@ def _folder(request, folder_name, view_name, option, template_name):
     }
 
     if request.is_ajax():
+        resp_dict['pm_messages'] = list(resp_dict['pm_messages'].values())  # turn objects into dicts for proper serialisation
         return _json_response(resp_dict)
 
     return render_to_response(template_name, resp_dict,
@@ -217,7 +219,9 @@ def reply(request, message_id, form_class=FullReplyForm, formatters=(format_subj
         post = request.POST.copy()
         if 'subject' not in post:  # case of the quick reply form
             post['subject'] = initial['subject']
-        form = form_class(post, sender=user, recipient=parent.sender or parent.email,
+        # check for case when user replies to own message/thread before intial recipient replied
+        r = parent.sender if parent.sender != user else parent.recipient
+        form = form_class(post, sender=user, recipient=r or parent.email,
             channel=autocomplete_channel,
             user_filter=user_filter,
             exchange_filter=exchange_filter,
@@ -277,7 +281,7 @@ def _view(request, filter, form_class=QuickReplyForm, formatters=(format_subject
             received = None
         if request.is_ajax():
             return _json_response({
-                'pm_messages': msgs,
+                'pm_messages': list(msgs.values()),
                 'archived': archived,
                 'reply_to_pk': received.pk if received else None
             })
@@ -301,6 +305,12 @@ def view(request, message_id, *args, **kwargs):
 def view_conversation(request, thread_id, *args, **kwargs):
     """Display a conversation."""
     return _view(request, Q(thread=thread_id), *args, **kwargs)
+
+
+@login_required
+def view_threads(request, *args, **kwargs):
+    """Display all threads (includes sent and recieved, thats difference with inbox)"""
+    return _view(request, Q(), *args, **kwargs)
 
 
 def _update(request, field_bit, success_msg, field_value=None, success_url=None):

@@ -212,10 +212,10 @@ class MessageManager(models.Manager):
         """
         Return a field-lookups filter as a permission controller for a reply request.
 
-        The user must be the recipient of the accepted, non-deleted, message
+        The user must be the recipient or sender of the accepted, non-deleted, message
 
         """
-        return models.Q(recipient=user) & models.Q(moderation_status=STATUS_ACCEPTED) & models.Q(recipient_deleted_at__isnull=True)
+        return (models.Q(recipient=user) | models.Q(sender=user)) & models.Q(moderation_status=STATUS_ACCEPTED) & models.Q(recipient_deleted_at__isnull=True)
 
     def set_read(self, user, filter):
         """
