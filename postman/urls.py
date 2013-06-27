@@ -99,7 +99,7 @@ OPTIONS = OPTION_MESSAGES
 
 urlpatterns = patterns('postman.views',
     url(r'^inbox/(?:(?P<option>'+OPTIONS+')/)?$', 'inbox', name='postman_inbox'),
-    url(r'^threads/$', 'view_threads', name='postman_threads'),
+    url(r'^threads/(?:(?P<option>'+OPTIONS+')/)?$', 'view_threads', name='postman_threads'),
     url(r'^sent/(?:(?P<option>'+OPTIONS+')/)?$', 'sent', name='postman_sent'),
     url(r'^archives/(?:(?P<option>'+OPTIONS+')/)?$', 'archives', name='postman_archives'),
     url(r'^trash/(?:(?P<option>'+OPTIONS+')/)?$', 'trash', name='postman_trash'),

@@ -94,6 +94,14 @@ def inbox(request, option=None, template_name='postman/inbox.html'):
 
 
 @login_required
+def view_threads(request, option=None, template_name='postman/inbox.html'):
+    """
+    Display all threads (includes sent and recieved, thats difference from inbox)
+    """
+    return _folder(request, 'threads', 'postman_threads', option, template_name)
+
+
+@login_required
 def sent(request, option=None, template_name='postman/sent.html'):
     """
     Display the list of sent messages for the current user.
@@ -291,7 +299,12 @@ def _view(request, filter, form_class=QuickReplyForm, formatters=(format_subject
             'reply_to_pk': received.pk if received else None,
             'form': form_class(initial=received.quote(*formatters)) if received else None,
             'next_url': request.GET.get('next', reverse('postman_inbox')),
-            }, context_instance=RequestContext(request))
+        }, context_instance=RequestContext(request))
+    if request.is_ajax():
+        return _json_response({
+            'pm_messages': [],
+            'error': 'no messages found'
+        })
     raise Http404
 
 
@@ -305,12 +318,6 @@ def view(request, message_id, *args, **kwargs):
 def view_conversation(request, thread_id, *args, **kwargs):
     """Display a conversation."""
     return _view(request, Q(thread=thread_id), *args, **kwargs)
-
-
-@login_required
-def view_threads(request, *args, **kwargs):
-    """Display all threads (includes sent and recieved, thats difference with inbox)"""
-    return _view(request, Q(), *args, **kwargs)
 
 
 def _update(request, field_bit, success_msg, field_value=None, success_url=None):

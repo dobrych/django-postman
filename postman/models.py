@@ -196,6 +196,24 @@ class MessageManager(models.Manager):
             (models.Q(recipient=user) & models.Q(moderation_status=STATUS_ACCEPTED)) | models.Q(sender=user),
         ).order_by('sent_at')
 
+    def threads(self, user, related=True, **kwargs):
+        """
+        Return accepted messages received and sent by a user but not marked as archived or deleted.
+        """
+        related = ('sender',) if related else None
+        filters = ({
+            'recipient': user,
+            'recipient_archived': False,
+            'recipient_deleted_at__isnull': True,
+            'moderation_status': STATUS_ACCEPTED,
+        }, {
+            'sender': user,
+            'sender_archived': False,
+            'sender_deleted_at__isnull': True,
+            'moderation_status': STATUS_ACCEPTED,
+        })
+        return self._folder(related, filters, **kwargs)
+
     def as_recipient(self, user, filter):
         """
         Return messages matching a filter AND being visible to a user as the recipient.
