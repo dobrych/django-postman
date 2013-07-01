@@ -167,12 +167,14 @@ def write(request, recipients=None, form_classes=(WriteForm, AnonymousWriteForm)
         if form.is_valid():
             is_successful = form.save(auto_moderators=auto_moderators)
             if is_successful:
-                messages.success(request, _("Message successfully sent."), fail_silently=True)
+                # messages.success(request, _("Message successfully sent."), fail_silently=True)
+                msg = _("Message successfully sent.")
             else:
-                messages.warning(request, _("Message rejected for at least one recipient."), fail_silently=True)
+                # messages.warning(request, _("Message rejected for at least one recipient."), fail_silently=True)
+                msg = _("Message rejected for at least one recipient.")
             next_redir = request.GET.get('next', success_url or next_url or 'postman_inbox')
             if request.is_ajax():
-                return _json_response({'sent': True, 'next': next_redir})
+                return _json_response({'sent': True, 'next': next_redir, 'msg': msg})
             return redirect(next_redir)
         elif request.is_ajax():
             errors = dict((key, [unicode(v) for v in values]) for key, values in form.errors.items())
@@ -237,12 +239,14 @@ def reply(request, message_id, form_class=FullReplyForm, formatters=(format_subj
         if form.is_valid():
             is_successful = form.save(parent=parent, auto_moderators=auto_moderators)
             if is_successful:
-                messages.success(request, _("Message successfully sent."), fail_silently=True)
+                # messages.success(request, _("Message successfully sent."), fail_silently=True)
+                msg = _("Message successfully sent.")
             else:
-                messages.warning(request, _("Message rejected for at least one recipient."), fail_silently=True)
+                # messages.warning(request, _("Message rejected for at least one recipient."), fail_silently=True)
+                msg = _("Message rejected for at least one recipient.")
             next_redir = success_url or next_url or 'postman_inbox'
             if request.is_ajax():
-                return _json_response({'sent': True, 'next': next_redir})
+                return _json_response({'sent': True, 'next': next_redir, 'msg': msg})
             return redirect(request.GET.get('next', next_redir))
         elif request.is_ajax():
             errors = dict((key, [unicode(v) for v in values]) for key, values in form.errors.items())
@@ -344,14 +348,14 @@ def _update(request, field_bit, success_msg, field_value=None, success_url=None)
         sender_rows = Message.objects.as_sender(user, filter).update(**{'sender_{0}'.format(field_bit): field_value})
         if not (recipient_rows or sender_rows):
             raise Http404  # abnormal enough, like forged ids
-        messages.success(request, success_msg, fail_silently=True)
+        # messages.success(request, success_msg, fail_silently=True)
         if request.is_ajax():
-            return _json_response({'success': True})
+            return _json_response({'success': True, 'msg': success_msg})
         return redirect(request.GET.get('next', success_url or next_url))
     else:
-        messages.warning(request, _("Select at least one object."), fail_silently=True)
+        # messages.warning(request, _("Select at least one object."), fail_silently=True)
         if request.is_ajax():
-            return _json_response({'success': False})
+            return _json_response({'success': False, 'msg': _("Select at least one object.")})
         return redirect(next_url)
 
 
