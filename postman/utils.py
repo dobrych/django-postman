@@ -9,6 +9,8 @@ from django.template.loader import render_to_string
 from django.utils.encoding import force_unicode
 from django.utils.translation import ugettext, ugettext_lazy as _
 
+from mxweb.libs.email import send_email_alternative
+
 # make use of a favourite notifier app such as django-notification
 # but if not installed or not desired, fallback will be to do basic emailing
 name = getattr(settings, 'POSTMAN_NOTIFIER_APP', 'notification')
@@ -73,8 +75,12 @@ def email(subject_template, message_template, recipient_list, object, action=Non
     # Email subject *must not* contain newlines
     subject = ''.join(subject.splitlines())
     message = render_to_string(message_template, ctx_dict)
+    html = ''
     # during the development phase, consider using the setting: EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-    send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, recipient_list, fail_silently=True)
+    # send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, recipient_list, fail_silently=True)
+    send_email_alternative(recipient_list,
+                           subject,
+                           message, sender=settings.EMAIL_NOTIFICATIONS_ADDRESS, html=html)
 
 
 def email_visitor(object, action):
@@ -97,7 +103,7 @@ def notify_user(object, action):
         # the context key 'message' is already used in django-notification/models.py/send_now() (v0.2.0)
         notification.send(users=[user], label=label, extra_context={'pm_message': object, 'pm_action': action})
     else:
-        if not DISABLE_USER_EMAILING and user.email and user.is_active:
+        if not DISABLE_USER_EMAILING and user.email and user.is_active and user.get_profile().receive_message_notifications:
             email('postman/email_user_subject.txt', 'postman/email_user.txt', [user.email], object, action)
 
 
