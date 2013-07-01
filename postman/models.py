@@ -285,10 +285,14 @@ class Message(models.Model):
     def __unicode__(self):
         return "{0}>{1}:{2}".format(self.obfuscated_sender, self.obfuscated_recipient, Truncator(self.subject).words(5))
 
-    @models.permalink
     def get_absolute_url(self):
-        # return ('postman_view', [str(self.pk)])
-        return ('/messgaes/#t/%s/#m/%s' % (self.thread_id, self.id))
+        return ('/messages/#t/%s/#m/%s' % (self.thread_id, self.id))
+
+    def get_email_absolute_url(self):
+        """
+        Returns a url for use in email notifications
+        """
+        return '%s%s' % (settings.MX_WEB_URL, self.get_absolute_url())
 
     def is_pending(self):
         """Tell if the message is in the pending state."""
