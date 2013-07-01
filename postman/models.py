@@ -286,7 +286,10 @@ class Message(models.Model):
         return "{0}>{1}:{2}".format(self.obfuscated_sender, self.obfuscated_recipient, Truncator(self.subject).words(5))
 
     def get_absolute_url(self):
-        return ('/messages/#t/%s/#m/%s' % (self.thread_id, self.id))
+        tid = self.thread_id
+        if tid is None:
+            tid = 0
+        return ('/messages/#t/%s/m/%s' % (tid, self.id))
 
     def get_email_absolute_url(self):
         """
