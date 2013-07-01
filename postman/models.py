@@ -287,7 +287,8 @@ class Message(models.Model):
 
     @models.permalink
     def get_absolute_url(self):
-        return ('postman_view', [str(self.pk)])
+        # return ('postman_view', [str(self.pk)])
+        return ('/messgaes/#t/%s/#m/%s' % (self.thread_id, self.id))
 
     def is_pending(self):
         """Tell if the message is in the pending state."""
