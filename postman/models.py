@@ -554,3 +554,16 @@ class PendingMessage(Message):
     def set_rejected(self):
         """Set the message as rejected."""
         self.moderation_status = STATUS_REJECTED
+
+
+from django.conf import settings
+
+if hasattr(settings, 'POSTMAN_ALWAYS_CREATE_THREAD') and settings.POSTMAN_ALWAYS_CREATE_THREAD is True:
+    from django.db.models.signals import post_save
+    from django.dispatch import receiver
+
+    @receiver(post_save, sender=Message)
+    def handle_thread_id_for_new_message(sender, instance, created, **kwargs):
+        if created and not instance.thread_id:  # apply only for newly created instances
+            instance.thread_id = instance.id
+            instance.save()
