@@ -174,7 +174,7 @@ def write(request, recipients=None, form_classes=(WriteForm, AnonymousWriteForm)
                 msg = _("Message rejected for at least one recipient.")
             next_redir = request.GET.get('next', success_url or next_url or 'postman_inbox')
             if request.is_ajax():
-                return _json_response({'sent': True, 'next': next_redir, 'msg': msg})
+                return _json_response({'sent': True, 'next': next_redir, 'msg': msg, 'thread_id': form.instance.thread_id, 'message_id': form.instance.id})
             return redirect(next_redir)
         elif request.is_ajax():
             errors = dict((key, [unicode(v) for v in values]) for key, values in form.errors.items())
@@ -246,7 +246,7 @@ def reply(request, message_id, form_class=FullReplyForm, formatters=(format_subj
                 msg = _("Message rejected for at least one recipient.")
             next_redir = success_url or next_url or 'postman_inbox'
             if request.is_ajax():
-                return _json_response({'sent': True, 'next': next_redir, 'msg': msg})
+                return _json_response({'sent': True, 'next': next_redir, 'msg': msg, 'thread_id': form.instance.thread_id, 'message_id': form.instance.id})
             return redirect(request.GET.get('next', next_redir))
         elif request.is_ajax():
             errors = dict((key, [unicode(v) for v in values]) for key, values in form.errors.items())
