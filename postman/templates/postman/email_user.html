@@ -1,0 +1,86 @@
+{% load humanize %}
+{% load newsitem_tags %}
+{% load tags %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ subject }}</title>
+    <style>
+        a {color:#0d81b8;text-decoration:none;}
+        a:hover {text-decoration:underline;}
+    </style>
+</head>
+
+<body style="text-align:center;width:100%;margin:0;padding:0;background-color:#FAFAFA;color:#444;font-family:'Helvetica Neue', Helvetica, Arial, sans-serif;font-size:14px;line-height:20px;-webkit-text-size-adjust:none;">
+    <center>
+        <table cellpadding="0" cellspacing="0" style="margin:0;padding:30px;background-color:#FAFAFA;height:100%;width:100%;border:none;">
+            <tr>
+                <td style="border-collapse:collapse;vertical-align:top;text-align:center;">
+                    <a href="{{ host_url }}{% url 'mx-login' %}?utm_source=message_notification&amp;utm_medium=email&amp;utm_content=logo&amp;utm_campaign={{ utm_campaign }}" title="Marinexplore">
+                        <img src="{{ static_url_fixed }}/img/marinexplore_rgb.png" alt="Marinexplore" title="Marinexplore" style="border:none;padding-bottom:30px;" width="164" height="75">
+                    </a>
+                    <!-- begin content border -->
+                    <table cellpadding="0" cellspacing="0" style="width:602px;margin:0 auto;border:1px solid #ddd;">
+                        <tr>
+                            <td>
+                                <!-- begin comment header -->
+                                <table style="width:600px;background:#e2f5f9;text-align:left;" cellpadding="30" cellspacing="0">
+                                    <tr>
+                                        <td>
+                                            <table style="width:540px;border:none;" cellpadding="0" cellspacing="0">
+                                                <tr>
+                                                    <td style="width:86px;text-align:left;vertical-align:top;">
+                                                        <a href="{{ host_url }}{% url_set_query_params object.get_absolute_url utm_source='message_notification' utm_medium='email' utm_content='comment_icon' utm_campaign=utm_campaign %}" title="Reply to this message on Marinexplore" style="color:#0d81b8;text-decoration:none;"><img src="{{ static_url_fixed }}/img/comment-icon-white-stroked_50x50.png" style="padding:5px;" width="50" height="50" alt=""/></a>
+                                                    </td>
+                                                    <td style="width:354px;text-align:left;vertical-align:middle;word-wrap:break-word;">
+                                                        {% if action == 'acceptance' %}
+                                                        <strong>{{ object.sender }}</strong><br>Sent you a message on Marinexplore
+                                                        {% elif action == 'rejection' %}
+                                                        <strong>Moderator</strong><br>Your message was moderated
+                                                        {% endif %}
+                                                    </td>
+                                                    <td style="width:100px;text-align:right;">
+                                                        <a href="{{ host_url }}{% url_set_query_params object.get_absolute_url utm_source='message_notification' utm_medium='email' utm_content='reply_button' utm_campaign=utm_campaign %}" style="color:#fff;background:#ff7300;text-decoration:none;display:inline-block;padding:5px 10px;-webkit-border-radius:5px;-moz-border-radius:5px;border-radius:5px;">Reply</a>
+                                                    </td>
+                                                </tr>
+                                            </table>
+                                         </td>
+                                    </tr>
+                                </table>
+                                <!-- end comment header -->
+                                <!-- begin comment -->
+                                <table style="width:600px;text-align:left;background:#fff;color:#444;border-top:1px solid #a9d2da;" cellpadding="30" cellspacing="0">
+                                    <tr>
+                                        <td>
+                                            <table style="width:100%;border:none;" cellpadding="0" cellspacing="0">
+                                                <tr>
+                                                    <td style="width:86px;text-align:left;vertical-align:top;">
+                                                        <a href='{{ host_url }}/{{ object.sender.profile.public_url }}?utm_source=message_notification&amp;utm_medium=email&amp;utm_content=profile_photo&amp;utm_campaign={{ utm_campaign }}'><img style="background:#fff;padding:4px;border:1px solid #eee;-webkit-border-radius:3px;-moz-border-radius:3px;border-radius:3px;" src='{{ object.sender.profile.photo_small }}' alt='' width="50" height="50"/></a>
+                                                    </td>
+                                                    <td style="width:454px;text-align:left;vertical-align:top;word-wrap:break-word;">
+                                                        <div style="word-wrap:break-word;margin-top:5px;">
+                                                            {% bleach_and_link_comment object.body %}
+                                                            <a href="{{ host_url }}{% url_set_query_params object.get_absolute_url utm_source='message_notification' utm_medium='email' utm_content='view_conversation' utm_campaign=utm_campaign %}" style="font-size:11px;color:#0d81b8;text-decoration:none;">VIEW CONVERSATION</a>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                    </tr>
+                                </table>
+                                <!-- end comment -->
+                            </td>
+                        </tr>
+                    </table>
+                    <!-- end content border -->
+                    <div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #646464; font-size: 11px; line-height: 1.4; margin-top:12px;">
+                        To disable messaging notifications, <a href="{{ host_url }}{% url 'mx-profile-edit-notifications' %}?utm_source=message_notification&amp;utm_medium=email&amp;utm_content=unsubscribe&amp;utm_campaign={{ utm_campaign }}" title="Edit your notification preferences" style="color:#646464;text-decoration:underline;">edit your notification preferences.</a><br/>
+                        This email was sent by Marinexplore, the ocean's big data platform.<br/>
+                        Marinexplore Inc., 920 Stewart Drive, Sunnyvale, CA 94085.
+                    </div>
+                </td>
+            </tr>
+        </table>
+    </center>
+</body>
+</html>

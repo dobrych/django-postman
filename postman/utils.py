@@ -67,15 +67,23 @@ def format_subject(subject):
     return subject if re.match(pattern, subject, re.IGNORECASE) else str.format(subject=subject)
 
 
-def email(subject_template, message_template, recipient_list, object, action=None):
+def email(subject_template, text_template, html_template, recipient_list, object, action=None):
     """Compose and send an email."""
     site = Site.objects.get_current()
     ctx_dict = {'site': site, 'object': object, 'action': action}
     subject = render_to_string(subject_template, ctx_dict)
     # Email subject *must not* contain newlines
     subject = ''.join(subject.splitlines())
-    message = render_to_string(message_template, ctx_dict)
-    html = ''
+    message = render_to_string(text_template, ctx_dict)
+    utm_campaign = "message_%s" % object.id
+    html_dict = {'host_url': settings.MX_WEB_URL,
+                 'static_url_fixed': settings.STATIC_URL_FIXED,
+                 'subject': subject,
+                 'object': object,
+                 'action': action,
+                 'utm_campaign': utm_campaign,
+                 }
+    html = render_to_string(html_template, html_dict)
     # during the development phase, consider using the setting: EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
     # send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, recipient_list, fail_silently=True)
     send_email_alternative(recipient_list,
@@ -85,7 +93,10 @@ def email(subject_template, message_template, recipient_list, object, action=Non
 
 def email_visitor(object, action):
     """Email a visitor."""
-    email('postman/email_visitor_subject.txt', 'postman/email_visitor.txt', [object.email], object, action)
+    email('postman/email_visitor_subject.txt',
+          'postman/email_visitor.txt',
+          'postman/email_visitor.html',
+          [object.email], object, action)
 
 
 def notify_user(object, action):
@@ -104,7 +115,7 @@ def notify_user(object, action):
         notification.send(users=[user], label=label, extra_context={'pm_message': object, 'pm_action': action})
     else:
         if not DISABLE_USER_EMAILING and user.email and user.is_active and user.get_profile().receive_message_notifications:
-            email('postman/email_user_subject.txt', 'postman/email_user.txt', [user.email], object, action)
+            email('postman/email_user_subject.txt', 'postman/email_user.txt', 'postman/email_user.html', [user.email], object, action)
 
 
 # JSON datetime encoder
