@@ -339,8 +339,13 @@ def _update(request, field_bit, success_msg, field_value=None, success_url=None)
     if not request.method == 'POST':
         raise Http404
     next_url = _get_referer(request) or 'postman_inbox'
-    pks = request.POST.getlist('pks')
-    tpks = request.POST.getlist('tpks')
+    if request.is_ajax():
+        pks = request.POST.getlist('pks[]')
+        tpks = request.POST.getlist('tpks[]')
+    else:
+        pks = request.POST.getlist('pks')
+        tpks = request.POST.getlist('tpks')
+    print "\n\npks: %s | tpks: %s" % (pks, tpks)
     if pks or tpks:
         user = request.user
         filter = Q(pk__in=pks) | Q(thread__in=tpks)
