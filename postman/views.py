@@ -345,7 +345,6 @@ def _update(request, field_bit, success_msg, field_value=None, success_url=None)
     else:
         pks = request.POST.getlist('pks')
         tpks = request.POST.getlist('tpks')
-    print "\n\npks: %s | tpks: %s" % (pks, tpks)
     if pks or tpks:
         user = request.user
         filter = Q(pk__in=pks) | Q(thread__in=tpks)
