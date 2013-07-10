@@ -173,6 +173,12 @@ class WriteForm(BaseWriteForm):
         fields = ('recipients', 'subject', 'body')
 
 
+class WriteFormSubjectNotRequired(WriteForm):
+    def __init__(self, *args, **kwargs):
+        super(WriteFormSubjectNotRequired, self).__init__(*args, **kwargs)
+        self.fields['subject'].required = False
+
+
 class SimpleWriteForm(BaseWriteForm):
     """The form for an authenticated user, to compose a message."""
     # specify help_text only to avoid the possible default 'Enter text to search.' of ajax_select v1.2.5
