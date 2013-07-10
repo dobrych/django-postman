@@ -27,6 +27,11 @@ from postman.fields import CommaSeparatedUserField
 from postman.models import Message
 from postman.utils import WRAP_WIDTH
 
+try:
+    import bleach
+except ImportError:
+    bleach = None  # could be used in message body markup cleaning
+
 
 class BaseWriteForm(forms.ModelForm):
     """The base class for other forms."""
@@ -97,6 +102,15 @@ class BaseWriteForm(forms.ModelForm):
             if errors:
                 raise forms.ValidationError(errors)
         return recipients
+
+    def clean_body(self):
+        """
+        If there are bleach package use it for markup cleanup
+        """
+        body = self.cleaned_data['body']
+        if bleach is not None and hasattr(bleach, 'clean') and hasattr(settings, 'ALLOWED_HTML_TAGS') and hasattr(settings, 'ALLOWED_HTML_ATTRIBUTES'):
+                body = bleach.clean(body, tags=settings.ALLOWED_HTML_TAGS, attributes=settings.ALLOWED_HTML_ATTRIBUTES)
+        return body
 
     @transaction.commit_on_success
     def save(self, recipient=None, parent=None, auto_moderators=[]):
