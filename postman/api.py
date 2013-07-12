@@ -45,6 +45,7 @@ def pm_broadcast(sender, recipients, subject, body='', skip_notification=False):
     for recipient in recipients:
         message.recipient = recipient
         message.pk = None
+        message.thread_id = None
         message.save()
         if not skip_notification:
             message.notify_users(STATUS_PENDING)
