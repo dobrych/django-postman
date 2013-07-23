@@ -1,6 +1,7 @@
 from __future__ import unicode_literals
 
 from django import forms
+from django.conf import settings
 from django.contrib import admin
 from django.db import transaction
 from django.utils.translation import ugettext, ugettext_lazy as _
@@ -185,5 +186,6 @@ class PendingMessageAdmin(MessageAdmin):
         "Deleting is impossible"
         return False
 
-admin.site.register(Message, MessageAdmin)
-admin.site.register(PendingMessage, PendingMessageAdmin)
+if getattr(settings, 'POSTMAN_ENABLE_ADMIN', False):
+    admin.site.register(Message, MessageAdmin)
+    admin.site.register(PendingMessage, PendingMessageAdmin)
